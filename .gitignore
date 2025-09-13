@@ -1,0 +1,53 @@
+# Binaries for programs and plugins
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test binaries
+*.test
+
+# Go build cache
+.cache/go-build/
+
+# IDE-related files
+.idea/
+.vscode/
+*.swp
+*.swo
+*.bak
+*.orig
+*.rej
+*~
+.#*
+
+# Dependency management files 
+vendor/
+Gopkg.lock
+Gopkg.toml
+
+# Environment variables and sensitive data
+.env
+.env.*
+config.local.yaml
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Go modules cache
+# This is usually managed by Go itself, but can be added if specific caching issues arise
+# go.sum
+# go.mod
+
+# Output directories
+bin/
+pkg/
+
+# Docker related files (if applicable)
+*.dockerignore
+docker-compose.yml.local
+
+# Coverage files
+*.out
