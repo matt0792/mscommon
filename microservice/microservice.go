@@ -32,6 +32,17 @@ func (ms *Microservice) Use(mw gin.HandlerFunc) *Microservice {
 	return ms
 }
 
+func (ms *Microservice) AddController(constructor interface{}) *Microservice {
+	err := ms.container.Provide(
+		constructor,
+		dig.Group("controllers"),
+	)
+	if err != nil {
+		log.Fatalf("failed to provide controller: %v", err)
+	}
+	return ms
+}
+
 func (ms *Microservice) Build() error {
 	for _, p := range ms.providers {
 		if err := ms.container.Provide(p); err != nil {
@@ -44,17 +55,16 @@ func (ms *Microservice) Build() error {
 		ms.engine.Use(mw)
 	}
 
-	// Routes
-	err := ms.container.Invoke(func(registrars []RouteRegistrar) {
-		for _, r := range registrars {
+	type ControllersIn struct {
+		dig.In
+		Controllers []RouteRegistrar `group:"controllers"`
+	}
+
+	return ms.container.Invoke(func(ci ControllersIn) {
+		for _, r := range ci.Controllers {
 			r.RegisterRoutes(ms.engine)
 		}
 	})
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (ms *Microservice) Run(addr string) {
