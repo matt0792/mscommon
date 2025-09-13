@@ -1,7 +1,6 @@
 package s2s
 
 import (
-	"context"
 	"net/http"
 	"strings"
 
@@ -21,19 +20,6 @@ func Middleware(validToken string) gin.HandlerFunc {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid service token"})
 			return
 		}
-
-		tenantID := c.GetHeader("X-Internal-Tenant-ID")
-		userID := c.GetHeader("X-Internal-User-ID")
-		roles := strings.Split(c.GetHeader("X-Internal-Roles"), ",")
-
-		ctx := context.WithValue(c.Request.Context(), S2SContextKey{}, S2SRequestContext{
-			TenantID: tenantID,
-			UserID:   userID,
-			Roles:    roles,
-		})
-
-		c.Request = c.Request.WithContext(ctx)
-		c.Set("s2s_context", ctx)
 
 		c.Next()
 	}
