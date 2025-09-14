@@ -1,18 +1,16 @@
 package initclient
 
 import (
-	"bytes"
-	"encoding/json"
+	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
 
 	"github.com/matt0792/mscommon/commonmodels"
+	"github.com/matt0792/mscommon/s2s"
 )
 
 func Init() {
 	providerLoc := os.Getenv("PROVIDER_LOCATION")
-	endpoint := providerLoc + "/services"
 
 	config := commonmodels.MicroserviceConfig{
 		ServiceLocation: os.Getenv("SERVICE_LOCATION"),
@@ -20,19 +18,14 @@ func Init() {
 		ServiceID:       os.Getenv("SERVICE_ID"),
 	}
 
-	payload, err := json.Marshal(config)
+	providerClient := s2s.NewClient(providerLoc, os.Getenv("SERVICE_TOKEN"))
+	resp, err := providerClient.PostJSON("/services/register", config)
 	if err != nil {
-		log.Printf("Failed to marshal config: %v", err)
-		return
-	}
-
-	resp, err := http.Post(endpoint, "application/json", bytes.NewBuffer(payload))
-	if err != nil {
-		log.Printf("Failed to call endpoint: %v", err)
+		log.Printf("Failed to call provider: %v", err)
 		return
 	}
 	defer resp.Body.Close()
 
-	log.Printf("Init client request to %s returned status %s", endpoint, resp.Status)
-
+	bodyBytes, _ := ioutil.ReadAll(resp.Body)
+	log.Printf("Response status: %s, body: %s", resp.Status, string(bodyBytes))
 }

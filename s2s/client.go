@@ -36,3 +36,15 @@ func (c *Client) PostJSON(path string, data interface{}) (*http.Response, error)
 
 	return (&http.Client{}).Do(req)
 }
+
+func (c *Client) Get(path string) (*http.Response, error) {
+	url := fmt.Sprintf("%s%s", c.BaseURL, path)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Authorization", "Bearer "+c.ServiceToken)
+
+	return (&http.Client{}).Do(req)
+}
