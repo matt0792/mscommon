@@ -10,7 +10,7 @@ import (
 	"github.com/matt0792/mscommon/commonmodels"
 )
 
-func init() {
+func Init() {
 	providerLoc := os.Getenv("PROVIDER_LOCATION")
 	endpoint := providerLoc + "/services"
 
