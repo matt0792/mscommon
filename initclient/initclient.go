@@ -1,15 +1,15 @@
 package initclient
 
 import (
-	"io/ioutil"
-	"log"
+	"fmt"
 	"os"
 
 	"github.com/matt0792/mscommon/commonmodels"
 	"github.com/matt0792/mscommon/s2s"
 )
 
-func Init() {
+func Init() error {
+	token := os.Getenv("SERVICE_TOKEN")
 	providerLoc := os.Getenv("PROVIDER_LOCATION")
 
 	config := commonmodels.MicroserviceConfig{
@@ -18,14 +18,18 @@ func Init() {
 		ServiceID:       os.Getenv("SERVICE_ID"),
 	}
 
-	providerClient := s2s.NewClient(providerLoc, os.Getenv("SERVICE_TOKEN"))
-	resp, err := providerClient.PostJSON("/services/register", config)
+	client, err := s2s.NewClient("ms-clientprovider", providerLoc, token)
 	if err != nil {
-		log.Printf("Failed to call provider: %v", err)
-		return
+		return err
 	}
-	defer resp.Body.Close()
 
-	bodyBytes, _ := ioutil.ReadAll(resp.Body)
-	log.Printf("Response status: %s, body: %s", resp.Status, string(bodyBytes))
+	var res string
+	err = client.CallMethod("AddServiceConfig", config, &res)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(res)
+
+	return nil
 }
