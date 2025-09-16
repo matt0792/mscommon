@@ -5,5 +5,6 @@ type InternalConfig struct {
 	DBName        string
 	ProviderLoc   string
 	ServiceToken  string
+	Port          string
 	ServiceConfig MicroserviceConfig
 }

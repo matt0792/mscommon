@@ -37,12 +37,14 @@ func GetInternalConfig() (commonmodels.InternalConfig, error) {
 	dbName := os.Getenv("DB_NAME")
 	providerLoc := os.Getenv("PROVIDER_LOCATION")
 	serviceToken := os.Getenv("SERVICE_TOKEN")
+	port := os.Getenv("PORT")
 
 	return commonmodels.InternalConfig{
 		MongoUri:      mongoUri,
 		DBName:        dbName,
 		ProviderLoc:   providerLoc,
 		ServiceToken:  serviceToken,
+		Port:          port,
 		ServiceConfig: serviceCfg,
 	}, nil
 }
