@@ -8,8 +8,12 @@ import (
 	"go.uber.org/dig"
 )
 
+type BackgroundWorker interface {
+	Start()
+}
+
 type Microservice struct {
-	container   *dig.Container
+	Container   *dig.Container
 	providers   []interface{}
 	engine      *gin.Engine
 	middlewares []gin.HandlerFunc
@@ -17,7 +21,7 @@ type Microservice struct {
 
 func NewMicroservice() *Microservice {
 	return &Microservice{
-		container: dig.New(),
+		Container: dig.New(),
 		engine:    gin.New(),
 	}
 }
@@ -33,7 +37,7 @@ func (ms *Microservice) Use(mw gin.HandlerFunc) *Microservice {
 }
 
 func (ms *Microservice) AddController(constructor interface{}) *Microservice {
-	err := ms.container.Provide(
+	err := ms.Container.Provide(
 		constructor,
 		dig.Group("controllers"),
 	)
@@ -43,9 +47,36 @@ func (ms *Microservice) AddController(constructor interface{}) *Microservice {
 	return ms
 }
 
+func (ms *Microservice) AddBackground(constructor interface{}) *Microservice {
+	err := ms.Container.Provide(
+		constructor,
+		dig.Group("backgrounds"),
+	)
+	if err != nil {
+		log.Fatalf("failed to provide background: %v", err)
+	}
+	return ms
+}
+
+func (ms *Microservice) startBackgrounds() {
+	type BackgroundsIn struct {
+		dig.In
+		Backgrounds []BackgroundWorker `group:"backgrounds"`
+	}
+
+	err := ms.Container.Invoke(func(bi BackgroundsIn) {
+		for _, bg := range bi.Backgrounds {
+			go bg.Start()
+		}
+	})
+	if err != nil {
+		log.Printf("failed to start backgrounds: %v", err)
+	}
+}
+
 func (ms *Microservice) Build() error {
 	for _, p := range ms.providers {
-		if err := ms.container.Provide(p); err != nil {
+		if err := ms.Container.Provide(p); err != nil {
 			return err
 		}
 	}
@@ -60,7 +91,7 @@ func (ms *Microservice) Build() error {
 		Controllers []RouteRegistrar `group:"controllers"`
 	}
 
-	return ms.container.Invoke(func(ci ControllersIn) {
+	return ms.Container.Invoke(func(ci ControllersIn) {
 		for _, r := range ci.Controllers {
 			r.RegisterRoutes(ms.engine)
 		}
@@ -71,6 +102,9 @@ func (ms *Microservice) Run(addr string) {
 	if err := ms.Build(); err != nil {
 		log.Fatalf("failed to build microservice: %v", err)
 	}
+
+	ms.startBackgrounds()
+
 	srv := &http.Server{
 		Addr:    addr,
 		Handler: ms.engine,
