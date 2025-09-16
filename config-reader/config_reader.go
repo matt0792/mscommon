@@ -23,4 +23,26 @@ func GetMSConfig() (commonmodels.MicroserviceConfig, error) {
 	}, nil
 }
 
-func GetInternalConfig() {}
+func GetInternalConfig() (commonmodels.InternalConfig, error) {
+	if err := godotenv.Load(); err != nil {
+		return commonmodels.InternalConfig{}, err
+	}
+
+	serviceCfg, err := GetMSConfig()
+	if err != nil {
+		return commonmodels.InternalConfig{}, err
+	}
+
+	mongoUri := os.Getenv("MONGO_URI")
+	dbName := os.Getenv("DB_NAME")
+	providerLoc := os.Getenv("PROVIDER_LOCATION")
+	serviceToken := os.Getenv("SERVICE_TOKEN")
+
+	return commonmodels.InternalConfig{
+		MongoUri:      mongoUri,
+		DBName:        dbName,
+		ProviderLoc:   providerLoc,
+		ServiceToken:  serviceToken,
+		ServiceConfig: serviceCfg,
+	}, nil
+}
